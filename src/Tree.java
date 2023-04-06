@@ -1,13 +1,10 @@
-import java.util.HashMap;
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Objects;
 
-// Дерево должно хранить в себе список людей и методы по работе с этим списком,
-// например добавление нового человека или поиск человека по имени.
-// Нет автоматизации процессов, например если известна мать, то можно сделать выводы о многих родственных связях
-public class Tree {
+public class Tree implements Serializable, TreeData {
     private HashSet<Person> personsData;
-    private HashMap<Integer,Integer> kidOfMap;
+    private HashSet<Parent> parentsData;
 
     public static Person findPersonByName(HashSet<Person> inputTree, String nameInput) {
         for (Person person : inputTree) {
@@ -17,44 +14,56 @@ public class Tree {
         return null;
     }
 
-    public HashSet<Person> getPersonsData() {
-        return personsData;
-    }
-
-    public void setPersonsData(HashSet<Person> personsData) {
-        this.personsData = personsData;
-    }
-
     public void addPerson(Person newPerson) {
         if (newPerson == null)
             return;
         personsData.add(newPerson);
     }
 
-    // public void addParent(Integer kidId, Integer parentId){
-    //     if (personsData.contains(kidId) && personsData.contains(parentId)) {
-            
-    //     }
-    // }
-
-    public void removePerson(Integer indexToRemove){
-        personsData.remove(indexToRemove); // <- Не работает, распишем.
-        // for (Person person : personsData) {
-        //     if (person.getId().equals(indexToRemove)){
-        //         personsData.remove(person);
-        //         break;
-        //     }
-        // }
-        
+    public void removePerson(Integer indexToRemove) {
+        personsData.removeIf((t) -> t.getId().equals(indexToRemove));
     }
 
-    public Tree(HashSet<Person> inputPersons, HashMap<Integer,Integer> inputConnections){
+    public void addParent(Integer kidId, Integer parentId) {
+        if (kidId != parentId)
+            parentsData.add(new Parent(kidId, parentId));
+    }
+
+    public HashSet<Integer> findAllKidsId(Integer parentId) {
+        HashSet<Integer> kidsIdSet = new HashSet<>();
+        for (Parent parentKidPair : parentsData) {
+            if (parentId.equals(parentKidPair.getIdParent())) {
+                kidsIdSet.add(parentKidPair.getIdKid());
+            }
+        }
+        return kidsIdSet;
+    }
+
+    public HashSet<Integer> findAllParentsId(Integer kidId) {
+        HashSet<Integer> parentsIdSet = new HashSet<>();
+        for (Parent parentKidPair : parentsData) {
+            if (kidId.equals(parentKidPair.getIdKid()))
+                parentsIdSet.add(kidId);
+        }
+        return parentsIdSet;
+    }
+
+    public HashSet<Person> idToPersonSet(HashSet<Integer> inputIdSet) {
+        HashSet<Person> outSet = new HashSet<>();
+        for (Person person : personsData) {
+            if (inputIdSet.contains(person.getId()))
+                outSet.add(person);
+        }
+        return outSet;
+    }
+
+    public Tree(HashSet<Person> inputPersons, HashSet<Parent> inputParents) {
         this.personsData = inputPersons;
-        this.kidOfMap = inputConnections;
+        this.parentsData = inputParents;
     }
 
-    public Tree(){
-        this(new HashSet<>(), new HashMap<>());
+    public Tree() {
+        this(new HashSet<>(), new HashSet<>());
     }
 
     @Override
@@ -69,7 +78,6 @@ public class Tree {
         return output.toString();
     }
 
-
     @Override
     public boolean equals(Object o) {
         if (o == this)
@@ -78,12 +86,58 @@ public class Tree {
             return false;
         }
         Tree tree = (Tree) o;
-        return Objects.equals(personsData, tree.personsData) && Objects.equals(kidOfMap, tree.kidOfMap);
+        return Objects.equals(personsData, tree.personsData) && Objects.equals(parentsData, tree.parentsData);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(personsData, kidOfMap);
+        return Objects.hash(personsData, parentsData);
+    }
+
+    public HashSet<Person> getPersonsData() {
+        return personsData;
+    }
+
+    public void setPersonsData(HashSet<Person> personsData) {
+        this.personsData = personsData;
+    }
+
+    public HashSet<Parent> getParentsData() {
+        return parentsData;
+    }
+
+    public void setParentsData(HashSet<Parent> parentsData) {
+        this.parentsData = parentsData;
+    }
+
+    public String showAll() {
+        StringBuilder outputString = new StringBuilder();
+        String prefix = "";
+        for (Person person : personsData) {
+            outputString.append(prefix);
+            outputString.append(person);
+            prefix = "\n";
+        }
+        return outputString.toString();
+    }
+
+    @Override
+    public void saveData() {
+        SaveFile sf = new SaveFile();
+        sf.saveData(this);
+    }
+
+    @Override
+    public void readData() {
+        SaveFile sf = new SaveFile();
+        Object dataFromFile = sf.readData();
+        if (dataFromFile instanceof Tree) {
+            Tree readTree = new Tree();
+            readTree = (Tree) (dataFromFile);
+            this.parentsData = readTree.parentsData;
+            this.personsData = readTree.personsData;
+        }
+        return;
     }
 
 }

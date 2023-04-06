@@ -1,15 +1,23 @@
-// import java.sql.Date;
-// import java.util.Objects;
+import java.io.Serializable;
+import java.time.Year;
 
-public class Person {
+public class Person implements Serializable {
     private Integer id;
     private String fullName;
-    // private Date BirthDate;
-    // private Date DeathDate;
+    private Year birthYear;
+    private Year deathYear;
+    private String nullFiller = "<нет_данных>";
 
     public Person(Integer id, String fullName) {
         this.id = id;
         this.fullName = fullName;
+    }
+
+    public Person(Integer id, String fullName, Year birthYear, Year deathYear) {
+        this.id = id;
+        this.fullName = fullName;
+        this.birthYear = birthYear;
+        this.deathYear = deathYear;
     }
 
     public String getFullName() {
@@ -20,14 +28,10 @@ public class Person {
         return id;
     }
 
-
     @Override
     public boolean equals(Object o) {
         if (o == this)
             return true;
-        if (o instanceof Integer){
-            return o == id;
-        }
         if (!(o instanceof Person)) {
             return false;
         }
@@ -35,7 +39,6 @@ public class Person {
         return person.id.equals(id);
     }
 
-    
     @Override
     public int hashCode() {
         return id.hashCode();
@@ -43,8 +46,8 @@ public class Person {
 
     @Override
     public String toString() {
-        return fullName;
+        return (fullName == null ? nullFiller : fullName) + " ("
+                + (birthYear == null ? nullFiller : birthYear.toString()) + " - "
+                + (deathYear == null ? nullFiller : deathYear.toString()) + ") ";
     }
-
-    // (TODO) Объявление класса, варианты вывода (для программы и для вывода)
 }
